@@ -5,21 +5,35 @@ class TestStockLocationChildren(SavepointCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.stock_input = cls.env.ref("stock.stock_location_company")
-
-    def test_stock_location_amount(self):
-        self.stock_quant1 = self.env["stock.quant"].create(
+        cls.stock_input = cls.env["stock.location"].create(
             {
-                "product_id": self.env.ref("product.product_delivery_01").id,
-                "location_id": self.stock_input.id,
+                "name": "Test",
+                "usage": "internal",
+            }
+        )
+        cls.stock_quant1 = cls.env["stock.quant"].create(
+            {
+                "product_id": cls.env.ref("product.product_delivery_01").id,
+                "location_id": cls.stock_input.id,
                 "quantity": 60,
             }
         )
-        self.stock_quant1 = self.env["stock.quant"].create(
+        cls.stock_quant1 = cls.env["stock.quant"].create(
             {
-                "product_id": self.env.ref("product.product_delivery_02").id,
-                "location_id": self.stock_input.id,
+                "product_id": cls.env.ref("product.product_delivery_02").id,
+                "location_id": cls.stock_input.id,
                 "quantity": 50,
             }
         )
-        self.assertEqual(self.stock_input.stock_amount, 110)
+
+    def test_stock_location_amount(self):
+        self.assertEqual(self.stock_input.stock_amount, 110.0)
+        location_record = self.env["stock.location"].search(
+            [("stock_amount", "=", 110.0)]
+        )
+        self.assertEqual(location_record.stock_amount, 110)
+        record_search = self.env["stock.location"].search(
+            [("stock_amount", "in", [110, 111])]
+        )
+        all_record = self.env["stock.location"].search([])
+        self.assertEqual(record_search, all_record)
